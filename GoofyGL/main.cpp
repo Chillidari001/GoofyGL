@@ -57,7 +57,7 @@ int main()
 	//------------------------
 	//vertex shader
 
-	unsigned int vertex_shader;
+	GLuint vertex_shader;
 	vertex_shader = glCreateShader(GL_VERTEX_SHADER);
 	glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
 	glCompileShader(vertex_shader);
@@ -73,7 +73,7 @@ int main()
 	}
 
 	//fragment shader
-	unsigned int fragment_shader;
+	GLuint fragment_shader;
 	fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
 	glShaderSource(fragment_shader, 1, &fragment_shader_source, NULL);
 	glCompileShader(fragment_shader);
@@ -86,7 +86,7 @@ int main()
 	}
 
 	//linking the shaders
-	unsigned int shader_program;
+	GLuint shader_program;
 	shader_program = glCreateProgram();
 	glAttachShader(shader_program, vertex_shader);
 	glAttachShader(shader_program, fragment_shader);
@@ -102,32 +102,58 @@ int main()
 
 	//set up vertex data and buffers and configure vertex attributes
 	//glViewport(0, 0, 800, 600);
-	float vertices[] = {
-		0.5f, 0.5f, 0.0f, //top right
-		0.5f, -0.5f, 0.0f, //bottom right
-		-0.5f, -0.5f, 0.0f, //bottom left
-		-0.5f, 0.5f, 0.0f //top left
+	GLfloat vertices[] = {
+		//first triangle
+		-0.9f, -0.5f, 0.0f,  //left 
+		-0.0f, -0.5f, 0.0f,  //right
+		-0.45f, 0.5f, 0.0f,  //top 
+		//second triangle
+		0.0f, -0.5f, 0.0f,  //left
+		0.9f, -0.5f, 0.0f,  //right
+		0.45f, 0.5f, 0.0f   //top 
 	};
-	unsigned int indices[] =
+	
+	/*GLuint indices[] =
 	{
 		0, 1, 3, //first triangle
 		1, 2, 3 //second triangle
-	};
-	unsigned int VBO, VAO, EBO;
-	glGenBuffers(1, &VBO);
+	};*/
+
+	//vertex buffer object (VBO) is where we hold vertex data that is sent to the gpu. VBOs can a 
+	//large number of vertices in GPU memory
+	//vertex array object (VAO) holds pointers to the VBO(s) and tells opengl how to interpret them
+	//they allow us to quickly switch between different VBOs
+	GLuint VBO, VAO, EBO;
 	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
 	glGenBuffers(1, &EBO);
 	//bind the vertex array object first and then bind and set vertex buffers and configure vertex attributes
+	//binding an object makes it the "current" object basically, so any function that modifies a type
+	//of object would modify the currently bound object
 	glBindVertexArray(VAO);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	//this store vertices in the VBO
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+	//comment out ebo as we dont need them to draw 2 triangles, used them before to draw rectangle as we didn't want overhead
+	//of specifying the same vertices. ebo only stores the vertices needed and let us dictate the order of drawing, so there was no overhead
+	/*glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);*/
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+
+	//this is allowed, the call to glVertexAttribPoiner registered VBO as the vertex attribute's
+	//bound vertex buffer object so after we can safely unbind
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	//remember: do NOT unbind the EBO while a VAO is active as the bound element buffer object IS stored in the VAO; keep the EBO bound.
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	 // You can unbind the VAO afterwards so other VAO calls won't accidentally modify this VAO, but this rarely happens. Modifying other
+	// VAOs requires a call to glBindVertexArray anyways so we generally don't unbind VAOs (nor VBOs) when it's not directly necessary.
+	//glBindVertexArray(0);
 
 	//imgui test
 	IMGUI_CHECKVERSION();
@@ -148,6 +174,9 @@ int main()
 	glUniform1f(glGetUniformLocation(shader_program, "size"), size);
 	glUniform4f(glGetUniformLocation(shader_program, "color"), color[0], color[1], color[2], color[3]);
 
+	//uncomment to draw in wireframe
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
 	while (!glfwWindowShouldClose(window))
 	{
 		//inpur
@@ -163,11 +192,13 @@ int main()
 		ImGui::NewFrame();
 
 		glUseProgram(shader_program);
-		glBindVertexArray(VAO);
+		glBindVertexArray(VAO); //as theres a single vao theres no need to bind it everytime, but doing so anyway
+
 		//draw triangles if opengl checkbox is ticked
 		if (draw_shape)
 		{
-			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+			//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
 		//glBindVertexArray(0); //no need to unbind everytime
 		//check and poll IO events and swap front and back buffer
@@ -199,9 +230,9 @@ int main()
 	ImGui::DestroyContext();
 
 	//delete all created objects
-	/*glDeleteVertexArrays(1, &VAO);
+	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
-	glDeleteProgram(shader_program);*/
+	glDeleteProgram(shader_program);
 
 	//glfwterminate clearing all previously allocated glfw resources
 	glfwTerminate();
