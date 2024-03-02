@@ -5,23 +5,21 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include <filesystem>
 
 void FramebufferSizeCallback(GLFWwindow* _window, int _width, int _height);
 void ProcessInput(GLFWwindow* _window);
-const char* vertex_shader_source = "#version 330 core\n"
-	"layout (location = 0) in vec3 a_pos;\n"
-	"uniform float size;\n" //float to manipulate size with imgui slider
-	"void main()\n"
-	"{\n"
-	"   gl_Position = vec4(size * a_pos.x, size * a_pos.y, size * a_pos.z, 1.0);\n"
-	"}\0";
-const char* fragment_shader_source = "#version 330 core\n"
-	"out vec4 frag_color;\n"
-	"uniform vec4 color;\n" //vec4 to manipulate color with imgui
-	"void main()\n"
-	"{\n"
-	"   frag_color = color;\n"
-	"}\n";
+static unsigned int CompileShader(const std::string& source, unsigned int type);
+static unsigned int CreateShader(const std::string& vertex_shader, const std::string& fragment_shader);
+struct ShaderProgramSource
+{
+	std::string vertex_source;
+	std::string fragment_source;
+};
+static ShaderProgramSource ParseShader(const std::string& filepath);
 
 //const unsigned int screen_width = 800;
 //const unsigned int screen_height = 600;
@@ -55,50 +53,25 @@ int main()
 
 	//build and compile shaders
 	//------------------------
-	//vertex shader
+	ShaderProgramSource source = ParseShader("Basic.shader");
+	std::cout << "VERTEX" << std::endl;
+	std::cout << source.vertex_source << std::endl;
+	std::cout << "FRAGMENT" << std::endl;
+	std::cout << source.fragment_source << std::endl;
+	unsigned int shader_program = CreateShader(source.vertex_source, source.fragment_source);
+	glUseProgram(shader_program);
 
-	GLuint vertex_shader;
-	vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertex_shader, 1, &vertex_shader_source, NULL);
-	glCompileShader(vertex_shader);
+	//variables to be changed in the imgui window
+	bool draw_shape = true;
+	//to change size using imgui slider
+	float size = 1.0f;
+	//value to change colour with imgui
+	float color[4] = { 0.9f,0.2f, 0.4f, 1.0f };
 
-	//check for shader compilation errors
-	int success;
-	char info_log[512];
-	glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		glGetShaderInfoLog(vertex_shader, 512, NULL, info_log);
-		std::cout << "ERROR::SHADER::VERTEX::COMPILTION_FAILED\n" << info_log << std::endl;
-	}
+	//exporting variables to shaders (values can be changed in imgui window so have in update instead)
+	//glUniform1f(glGetUniformLocation(shader_program, "size"), size);
+	//glUniform4f(glGetUniformLocation(shader_program, "color"), color[0], color[1], color[2], color[3]);
 
-	//fragment shader
-	GLuint fragment_shader;
-	fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragment_shader, 1, &fragment_shader_source, NULL);
-	glCompileShader(fragment_shader);
-	//check for shader compilation errors
-	glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		glGetShaderInfoLog(fragment_shader, 512, NULL, info_log);
-		std::cout << "ERROR::SHADER::FRAGMENT::COMPILTION_FAILED\n" << info_log << std::endl;
-	}
-
-	//linking the shaders
-	GLuint shader_program;
-	shader_program = glCreateProgram();
-	glAttachShader(shader_program, vertex_shader);
-	glAttachShader(shader_program, fragment_shader);
-	glLinkProgram(shader_program);
-	glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
-	if(!success)
-	{
-		glGetProgramInfoLog(shader_program, 512, NULL, info_log);
-		std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << info_log << std::endl;
-	}
-	glDeleteShader(vertex_shader);
-	glDeleteShader(fragment_shader);
 
 	//set up vertex data and buffers and configure vertex attributes
 	//glViewport(0, 0, 800, 600);
@@ -113,7 +86,7 @@ int main()
 		0.45f, 0.5f, 0.0f   //top 
 	};
 	
-	/*GLuint indices[] =
+	/*unsigned int indices[] =
 	{
 		0, 1, 3, //first triangle
 		1, 2, 3 //second triangle
@@ -123,7 +96,7 @@ int main()
 	//large number of vertices in GPU memory
 	//vertex array object (VAO) holds pointers to the VBO(s) and tells opengl how to interpret them
 	//they allow us to quickly switch between different VBOs
-	GLuint VBO, VAO, EBO;
+	unsigned int VBO, VAO, EBO;
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);
 	glGenBuffers(1, &EBO);
@@ -141,7 +114,7 @@ int main()
 	/*glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);*/
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, (void*)0);
 	glEnableVertexAttribArray(0);
 
 	//this is allowed, the call to glVertexAttribPoiner registered VBO as the vertex attribute's
@@ -162,18 +135,6 @@ int main()
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 330");
 
-	//variables to be changed in the imgui window
-	bool draw_shape = true;
-	//to change size using imgui slider
-	float size = 1.0f;
-	//value to change colour with imgui
-	float color[4] = { 0.8f,0.3f, 0.02f, 1.0f };
-
-	//exporting variables to shaders
-	glUseProgram(shader_program);
-	glUniform1f(glGetUniformLocation(shader_program, "size"), size);
-	glUniform4f(glGetUniformLocation(shader_program, "color"), color[0], color[1], color[2], color[3]);
-
 	//uncomment to draw in wireframe
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -191,10 +152,10 @@ int main()
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		glUseProgram(shader_program);
+		//glUseProgram(shader_program);
 		glBindVertexArray(VAO); //as theres a single vao theres no need to bind it everytime, but doing so anyway
 
-		//draw triangles if opengl checkbox is ticked
+		//draw triangles if imgui checkbox is ticked
 		if (draw_shape)
 		{
 			//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -237,6 +198,92 @@ int main()
 	//glfwterminate clearing all previously allocated glfw resources
 	glfwTerminate();
 	return 0;
+}
+
+static ShaderProgramSource ParseShader(const std::string& filepath)
+{
+	std::ifstream stream(filepath);
+	//std::filesystem::exists(filepath);
+
+	enum class ShaderType
+	{
+		NONE = -1,
+		VERTEX = 0,
+		FRAGMENT = 1
+	};
+	
+	std::string line;
+	std::stringstream string_stream[2]; //stack allocated array, 1 for vertex 1 for fragment
+	ShaderType type = ShaderType::NONE;
+
+	while (getline(stream, line))
+	{
+		if (line.find("#shader") != std::string::npos)
+		{
+			if (line.find("vertex") != std::string::npos)
+			{
+				//set mode to vertex
+				type = ShaderType::VERTEX;
+			}
+			else if (line.find("fragment") != std::string::npos)
+			{
+				//set mode to fragment
+				type = ShaderType::FRAGMENT;
+			}
+		}
+		else
+		{
+			string_stream[(int)type] << line << '\n';
+		}
+	}
+
+	//std::cout << string_stream[0].str() << std::endl;
+	//std::cout << string_stream[1].str() << std::endl;
+	return { string_stream[0].str(), string_stream[1].str() };
+}
+
+static unsigned int CompileShader(const std::string& source, unsigned int type)
+{
+	unsigned int id = glCreateShader(type);
+	const char* src = source.c_str();
+	glShaderSource(id, 1, &src, nullptr);
+	glCompileShader(id);
+
+	int success;
+	char info_log[512];
+	glGetShaderiv(id, GL_COMPILE_STATUS, &success);
+	if (!success) //if success == GL_FALSE
+	{
+		glGetShaderInfoLog(id, 512, NULL, info_log);
+		std::cout << "ERROR::SHADER::" << 
+			(type == GL_VERTEX_SHADER ? "VERTEX" : "FRAGMENT") << 
+			"::COMPILATION_FAILED\n" << info_log << std::endl;
+
+		glDeleteShader(id);
+		return 0;
+	}
+
+	return id;
+}
+
+static unsigned int CreateShader(const std::string& vertex_shader, const std::string& fragment_shader)
+{
+	//build shaders
+	//------------------------
+	unsigned int program = glCreateProgram();
+	unsigned int vs = CompileShader(vertex_shader, GL_VERTEX_SHADER);
+	unsigned int fs = CompileShader(fragment_shader, GL_FRAGMENT_SHADER);
+
+	glAttachShader(program, vs);
+	glAttachShader(program, fs);
+	glLinkProgram(program);
+	glValidateProgram(program);
+
+	glDeleteShader(vs);
+	glDeleteShader(fs);
+	//glDeleteProgram(program)
+
+	return program;
 }
 
 //glfw, whenever the window size changed this callback function executes

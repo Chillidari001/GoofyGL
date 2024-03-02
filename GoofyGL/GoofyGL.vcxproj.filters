@@ -9,15 +9,18 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
     <Filter Include="Source Files\imgui">
       <UniqueIdentifier>{0ebd6541-4965-48dc-9626-3037336705c5}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\imgui">
       <UniqueIdentifier>{60853973-91aa-448e-b297-bcc04e93ce11}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Resource Files\shaders">
+      <UniqueIdentifier>{3bcb49e7-0d64-47b0-ab95-f91d1a32039e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -77,5 +80,13 @@
     <ClInclude Include="imgui\imgui_impl_opengl3_loader.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Basic.shader">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="Basic2.Shader">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
