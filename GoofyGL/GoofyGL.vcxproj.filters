@@ -51,6 +51,9 @@
     <ClCompile Include="imgui\imgui_impl_opengl3.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
+    <ClCompile Include="shader_manager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imconfig.h">
@@ -80,12 +83,21 @@
     <ClInclude Include="imgui\imgui_impl_opengl3_loader.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
+    <ClInclude Include="shader_manager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Basic.shader">
       <Filter>Resource Files\shaders</Filter>
     </None>
     <None Include="Basic2.Shader">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="shader.vs">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="shader.fs">
       <Filter>Resource Files\shaders</Filter>
     </None>
   </ItemGroup>
