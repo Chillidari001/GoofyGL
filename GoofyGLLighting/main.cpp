@@ -1,20 +1,16 @@
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include"imgui_impl_opengl3.h"
-
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
 
-#include "shader_manager.h"
-#include "camera.h"
-#include "stb_image.h"
+#include "../GoofyGL/shader_manager.h"
+//#include "camera.h"
+#include "../GoofyGL/stb_image.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
-#include "ExampleCamera.h"
+#include "../GoofyGL/Camera.h"
 
 void FramebufferSizeCallback(GLFWwindow* _window, int _width, int _height);
 void ProcessInput(GLFWwindow* _window);
@@ -66,9 +62,9 @@ int main(void)
 		std::cout << "Failed to initialise GLAD" << std::endl;
 		return -1;
 	}
-	
+
 	glEnable(GL_DEPTH_TEST);
-	
+
 	//build and compile shaders
 	//------------------------
 	Shader first_shader("shader.vs", "shader.fs");
@@ -81,12 +77,12 @@ int main(void)
 		0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // top right
 		0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // bottom right
 		-0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // bottom left
-		-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left 
+		-0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // top left
 		//second triangle
 		/*0.0f, -0.5f, 0.0f,  //left
 		0.9f, -0.5f, 0.0f,  //right
 		0.45f, 0.5f, 0.0f*/   //top 
-		
+
 		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
 		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
@@ -130,7 +126,7 @@ int main(void)
 		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 	};
 
-	glm::vec3 cube_positions[] = 
+	glm::vec3 cube_positions[] =
 	{
 		glm::vec3(0.0f,  0.0f,  0.0f),
 		glm::vec3(2.0f,  5.0f, -15.0f),
@@ -177,7 +173,7 @@ int main(void)
 	glEnableVertexAttribArray(0);
 
 	//colour attribs
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3* sizeof(float)));
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
 	//texture coord attribs
@@ -219,7 +215,7 @@ int main(void)
 	//load and generate the texture
 	int width, height, nr_channels;
 	stbi_set_flip_vertically_on_load(true);
-	unsigned char *data = stbi_load("container.jpg", &width, &height, &nr_channels, 0);
+	unsigned char* data = stbi_load("container.jpg", &width, &height, &nr_channels, 0);
 	if (data)
 	{
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
@@ -252,13 +248,6 @@ int main(void)
 	}
 	stbi_image_free(data);
 
-	//imgui test
-	IMGUI_CHECKVERSION();
-	ImGui::CreateContext();
-	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init("#version 330");
-
 	//variables to be changed in the imgui window
 	bool draw_shape = true;
 	//to change size using imgui slider
@@ -273,10 +262,10 @@ int main(void)
 
 	//uncomment to draw in wireframe
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	
+
 	//we can tell opengl which texture unit each shader sampler belongs to before the render loop, only need to do it once
 	first_shader.Use();
-	
+
 	//glUniform1i(glGetUniformLocation(first_shader.ID, "texture1"), 0); // set it manually
 	//glUniform1i(glGetUniformLocation(first_shader.ID, "texture2"), 1); // set it manually
 	first_shader.SetInt("container_texture", 0);
@@ -288,7 +277,7 @@ int main(void)
 		float current_frame = glfwGetTime();
 		delta_time = current_frame - last_frame;
 		last_frame = current_frame;
-		
+
 		//input
 		ProcessInput(window);
 
@@ -305,18 +294,13 @@ int main(void)
 		glClearColor(0.2f, 0.6f, 0.5f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		//tell opengl a new frame is about to begin
-		ImGui_ImplOpenGL3_NewFrame();
-		ImGui_ImplGlfw_NewFrame();
-		ImGui::NewFrame();
-
 		//bind texture
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, texture1);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, texture2);
 		//glBindVertexArray(VAO);
-		
+
 		//latest camera stuff
 
 		//pass projection matrix to shader, can change every frame
@@ -326,9 +310,9 @@ int main(void)
 		//camera/view transformation
 		glm::mat4 view = main_camera.GetViewMatrix();
 		first_shader.SetMat4("view", view);
-		
+
 		glBindVertexArray(VAO); //as theres a single vao theres no need to bind it everytime, but doing so anyway
-		
+
 		// update the uniform color
 		//float time_value = glfwGetTime();
 		//float green_value = sin(time_value) / 2.0f + 0.5f;
@@ -350,35 +334,11 @@ int main(void)
 			}
 			//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		}
-		//glBindVertexArray(0); //no need to unbind everytime
-		//check and poll IO events and swap front and back buffer
 
-		//imgui window creation, name and features (text, checkbox etc.)
-		ImGui::Begin("Test Window");
-		ImGui::Text("Hello GoofyGL");
-		ImGui::Checkbox("Draw triangle(s)", &draw_shape);
-		ImGui::SliderFloat("Size", &size, 0.5f, 2.0f);
-		ImGui::ColorEdit4("Color", color);
-		ImGui::End();
-
-		//export variables to shader
-		//glUseProgram(shader_program);
-		//glUniform1f(glGetUniformLocation(shader_program, "size"), size);
-		//glUniform4f(glGetUniformLocation(shader_program, "color"), color[0], color[1], color[2], color[3]);
-
-		//render imgui elements
-		ImGui::Render();
-		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
-
-	//end imgui processes
-	ImGui_ImplOpenGL3_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
-	ImGui::DestroyContext();
-
 	//delete all created objects
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
