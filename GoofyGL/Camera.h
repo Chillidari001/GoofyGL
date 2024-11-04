@@ -40,12 +40,17 @@ public:
 	float mouse_sensitivity = 0.0f;
 	float zoom = 0.0f;
 	
+	//base constructor
+	Camera();
+	
 	//constructor with vectors
 	Camera(glm::vec3 _position, glm::vec3 _up, float _yaw, float _pitch);
 
 	//constructor with scalar values
 	Camera(float pos_x, float pos_y, float pos_z, float up_x, float up_y, float up_z, float _yaw, float _pitch);
 
+	~Camera();
+	
 	//returns view matrix calculated with euler angles and LookAt matrix
 	glm::mat4 GetViewMatrix();
 

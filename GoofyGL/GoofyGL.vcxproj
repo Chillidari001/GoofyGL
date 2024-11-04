@@ -141,6 +141,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\..\Downloads\glad.c" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="GoofyGL.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
     <ClCompile Include="imgui\imgui_demo.cpp" />
     <ClCompile Include="imgui\imgui_draw.cpp" />
@@ -156,6 +157,7 @@
     <ClInclude Include="..\..\..\Downloads\stb_image.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="ExampleCamera.h" />
+    <ClInclude Include="GoofyGL.h" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
     <ClInclude Include="imgui\imgui_impl_glfw.h" />
@@ -170,6 +172,8 @@
   <ItemGroup>
     <None Include="Basic.shader" />
     <None Include="Basic2.Shader" />
+    <None Include="light_cube.fs" />
+    <None Include="light_cube.vs" />
     <None Include="light_shader.fs" />
     <None Include="light_shader.vs" />
     <None Include="shader.fs" />

@@ -63,6 +63,9 @@
     <ClCompile Include="Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GoofyGL.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\imconfig.h">
@@ -104,6 +107,9 @@
     <ClInclude Include="ExampleCamera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GoofyGL.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Basic.shader">
@@ -122,6 +128,12 @@
       <Filter>Resource Files\shaders</Filter>
     </None>
     <None Include="light_shader.fs">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="light_cube.vs">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="light_cube.fs">
       <Filter>Resource Files\shaders</Filter>
     </None>
   </ItemGroup>
