@@ -1,8 +1,8 @@
 #version 330 core
 struct Material {
     //material vectors
-    vec3 ambient; //defines what color the surface reflects under ambient lighting, usually same as surface color
-    vec3 diffuse; //defines the color of the surface under diffuse lighting. diffuse color is set to the desired surface color (like ambient lighting)
+    //vec3 ambient; //defines what color the surface reflects under ambient lighting, usually same as surface color
+    sampler2D diffuse; //defines the color of the surface under diffuse lighting. diffuse color is set to the desired surface color (like ambient lighting)
     vec3 specular; //specular sets the color of the specular highlight on the surface (or maybe even reflect a surface-specific color)
     float shininess; //shininess impacts scattering/radius of the specular highlight
 };
@@ -18,6 +18,7 @@ struct Light {
 
 in vec3 normal;  
 in vec3 frag_pos;
+in vec2 tex_coords;
   
 uniform vec3 object_color;
 uniform vec3 light_color;
@@ -31,13 +32,13 @@ out vec4 frag_color;
 void main()
 {
     //ambient
-    vec3 ambient = light.ambient * material.ambient;
+    vec3 ambient = light.diffuse * vec3(texture(material.diffuse, tex_coords));
     
     //diffuse
     vec3 norm = normalize(normal);
     vec3 light_dir = normalize(light_pos - frag_pos);
     float diff = max(dot(norm, light_dir), 0.0);
-    vec3 diffuse = light.diffuse * (diff * material.diffuse);
+    vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse, tex_coords));
 
     //specular
     vec3 view_dir = normalize(view_pos - frag_pos);

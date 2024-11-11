@@ -19,9 +19,7 @@
 #include "ExampleCamera.h"
 
 //glfw shit being weird
-static void FramebufferSizeCallback(GLFWwindow* _window, int _width, int _height);
-static void MouseCallback(GLFWwindow* _window, double _xpos, double _ypos);
-static void ScrollCallback(GLFWwindow* _window, double _xoffset, double _yoffset);
+
 
 class GoofyGL
 {
@@ -30,7 +28,6 @@ public:
 	~GoofyGL();
 	//int GoofyGLInit();
 	void GoofyGLRun();
-	void ProcessInput(GLFWwindow* _window);
 	
 	//timing
 	float delta_time = 0.0f; //time between current and last frame
@@ -45,5 +42,10 @@ public:
 	float last_y = screen_height / 2;
 private:
 	GLFWwindow* window;
+	static void FramebufferSizeCallback(GLFWwindow* _window, int _width, int _height);
+	static void MouseCallback(GLFWwindow* _window, double _xpos, double _ypos);
+	static void ScrollCallback(GLFWwindow* _window, double _xoffset, double _yoffset);
+	void ProcessInput(GLFWwindow* _window);
+	unsigned int LoadTexture(char const* path);
 };
 
