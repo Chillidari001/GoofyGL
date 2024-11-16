@@ -19,7 +19,7 @@ enum Camera_Movement
 //base values
 static constexpr float base_yaw = -90.0f;
 static constexpr float base_pitch = 0.0f;
-static constexpr float base_speed = 2.5f;
+static constexpr float base_speed = 10.0f;
 static constexpr float base_sensitivity = 0.1f;
 static constexpr float base_zoom = 90.0f;
 

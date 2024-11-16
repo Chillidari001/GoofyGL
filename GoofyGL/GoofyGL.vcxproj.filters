@@ -147,5 +147,8 @@
     <Image Include="container2.png">
       <Filter>Resource Files\textures</Filter>
     </Image>
+    <Image Include="container2_specular.png">
+      <Filter>Resource Files\textures</Filter>
+    </Image>
   </ItemGroup>
 </Project>
