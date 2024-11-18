@@ -182,6 +182,7 @@ void GoofyGL::GoofyGLRun()
 	//variables to manipulate in imgui window
 	float light_linear = 0.09f;
 	float light_quadratic = 0.032f;
+	glm::vec3 _light_pos = glm::vec3(1.2f, 1.0f, 2.0f);
 
 
 
@@ -306,8 +307,11 @@ void GoofyGL::GoofyGLRun()
 		//imgui window creation, name and features (text, checkbox etc.)
 		ImGui::Begin("Test Window");
 		ImGui::Text("Hello GoofyGL");
-		ImGui::SliderFloat("Light Linear", &light_linear, 0.0f, 1.0f);
-		ImGui::SliderFloat("Light Quadratic", &light_quadratic, 0.0f, 1.0f);
+		ImGui::SliderFloat("Light Linear", &light_linear, 0.0f, 2.0f);
+		ImGui::SliderFloat("Light Quadratic", &light_quadratic, 0.0f, 2.0f);
+		ImGui::Text("Linear: %.3f", light_linear);
+		ImGui::Text("Quadratic: %.3f", light_quadratic);
+		ImGui::SliderFloat3("Light Position", &light_pos[0], -10.0f, 100.0f);
 		ImGui::End();
 
 		//export variables to shader

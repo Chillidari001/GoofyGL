@@ -61,5 +61,6 @@ void main()
     specular *= attenuation;
     
     vec3 result = ambient + diffuse + specular;
+    //frag_color = vec4(vec3(attenuation), 1.0); //trying to fix attenuation issue
     frag_color = vec4(result, 1.0);
 }
