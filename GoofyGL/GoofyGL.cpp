@@ -119,6 +119,13 @@ void GoofyGL::GoofyGLRun()
 	glm::vec3(-1.3f,  1.0f, -1.5f)
 	};
 
+	glm::vec3 point_lights_positions[] = {
+	glm::vec3(0.7f,  0.2f,  2.0f),
+	glm::vec3(2.3f, -3.3f, -4.0f),
+	glm::vec3(-4.0f,  2.0f, -12.0f),
+	glm::vec3(0.0f,  0.0f, -3.0f)
+	};
+
 	//vertex buffer object (VBO) is where we hold vertex data that is sent to the gpu. VBOs can hold a 
 	//large number of vertices in GPU memory
 	//vertex array object (VAO) holds pointers to the VBO(s) and tells opengl how to interpret them
@@ -231,18 +238,25 @@ void GoofyGL::GoofyGLRun()
 		glm::vec3 diffuse_color = light_color * glm::vec3(0.5f);
 		glm::vec3 ambient_color = diffuse_color * glm::vec3(0.2f);
 
-		//set values of light vectors in light struct
-		lighting_shader.SetVec3("light.position", light_pos);
-		//lighting_shader.SetVec3("light.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
-		lighting_shader.SetVec3("light.ambient", glm::vec3(0.2f, 0.2f, 0.2f));
-		//lighting_shader.SetVec3("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f)); // darken diffuse light a bit
-		lighting_shader.SetVec3("light.diffuse", glm::vec3(0.5f, 0.5f, 0.5f));
-		lighting_shader.SetVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
-		lighting_shader.SetFloat("light.constant", 1.0f);
-		//lighting_shader.SetFloat("light.linear", 0.09f);
-		//lighting_shader.SetFloat("light.quadratic", 0.032f);
-		lighting_shader.SetFloat("light.linear", light_linear);
-		lighting_shader.SetFloat("light.quadratic", light_quadratic);
+		//set values of properties in the different light structs
+		//directional light
+		lighting_shader.SetVec3("directional_light.direction", glm::vec3(-0.2f, -1.0f, -0.3f));
+		lighting_shader.SetVec3("directional_light.ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+		lighting_shader.SetVec3("directional_light.diffuse", glm::vec3(0.4f, 0.4f, 0.4f));
+		lighting_shader.SetVec3("directional_light.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+
+		//looping through the four point lights and setting their values
+		for (int i = 0; i < 4; i++)
+		{
+			std::string number = std::to_string(i);
+			lighting_shader.SetVec3("point_lights[" + number + "].position", point_lights_positions[i]);
+			lighting_shader.SetVec3("point_lights[" + number + "].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
+			lighting_shader.SetVec3("point_lights[" + number + "].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
+			lighting_shader.SetVec3("point_lights[" + number + "].specular", glm::vec3(1.0f, 1.0f, 1.0f));
+			lighting_shader.SetFloat("point_lights[" + number + "].constant", 1.0f);
+			lighting_shader.SetFloat("point_lights[" + number + "].linear", 0.09f);
+			lighting_shader.SetFloat("point_lights[" + number + "].quadratic", 0.032f);
+		}
 
 		//set values of material vectors in material struct
 		//lighting_shader.SetVec3("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
