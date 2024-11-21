@@ -258,6 +258,18 @@ void GoofyGL::GoofyGLRun()
 			lighting_shader.SetFloat("point_lights[" + number + "].quadratic", 0.032f);
 		}
 
+		//spotlight
+		lighting_shader.SetVec3("spot_light.position", main_camera.position);
+		lighting_shader.SetVec3("spot_light.direction", main_camera.front);
+		lighting_shader.SetVec3("spot_light.ambient", glm::vec3(0.00f, 0.00f, 0.00f));
+		lighting_shader.SetVec3("spot_light.diffuse", glm::vec3(1.0f, 1.0f, 1.0f));
+		lighting_shader.SetVec3("spot_light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+		lighting_shader.SetFloat("spot_light.constant", 1.0f);
+		lighting_shader.SetFloat("spot_light.linear", 0.09f);
+		lighting_shader.SetFloat("spot_light.quadratic", 0.032f);
+		lighting_shader.SetFloat("spot_light.cutoff", glm::cos(glm::radians(12.5f)));
+		lighting_shader.SetFloat("spot_light.outer_cutoff", glm::cos(glm::radians(15.0f)));
+
 		//set values of material vectors in material struct
 		//lighting_shader.SetVec3("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
 		//lighting_shader.SetVec3("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
