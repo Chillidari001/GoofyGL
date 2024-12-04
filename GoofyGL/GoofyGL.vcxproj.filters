@@ -27,7 +27,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="core\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\Downloads\glad.c">
@@ -54,16 +54,16 @@
     <ClCompile Include="imgui\imgui_impl_opengl3.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
-    <ClCompile Include="shader_manager.cpp">
+    <ClCompile Include="external\stb_image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="stb_image.cpp">
+    <ClCompile Include="core\GoofyGL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Camera.cpp">
+    <ClCompile Include="Cameras\Source\Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GoofyGL.cpp">
+    <ClCompile Include="core\shader_manager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -95,60 +95,30 @@
     <ClInclude Include="imgui\imgui_impl_opengl3_loader.h">
       <Filter>Header Files\imgui</Filter>
     </ClInclude>
-    <ClInclude Include="shader_manager.h">
+    <ClInclude Include="core\GoofyGL.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\Downloads\stb_image.h">
+    <ClInclude Include="Cameras\Header\Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Camera.h">
+    <ClInclude Include="Cameras\Header\ExampleCamera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ExampleCamera.h">
+    <ClInclude Include="core\shader_manager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GoofyGL.h">
+    <ClInclude Include="external\stb_image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Basic.shader">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="Basic2.Shader">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="shader.vs">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="shader.fs">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="light_shader.vs">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="light_shader.fs">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="light_cube.vs">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="light_cube.fs">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="container.jpg">
-      <Filter>Resource Files\textures</Filter>
-    </Image>
-    <Image Include="awesomeface.png">
-      <Filter>Resource Files\textures</Filter>
-    </Image>
-    <Image Include="container2.png">
-      <Filter>Resource Files\textures</Filter>
-    </Image>
-    <Image Include="container2_specular.png">
-      <Filter>Resource Files\textures</Filter>
-    </Image>
+    <None Include="assets\shaders\Basic.shader" />
+    <None Include="assets\shaders\Basic2.Shader" />
+    <None Include="assets\shaders\light_cube.fs" />
+    <None Include="assets\shaders\light_cube.vs" />
+    <None Include="assets\shaders\light_shader.fs" />
+    <None Include="assets\shaders\light_shader.vs" />
+    <None Include="assets\shaders\shader.fs" />
+    <None Include="assets\shaders\shader.vs" />
   </ItemGroup>
 </Project>
