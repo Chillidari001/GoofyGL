@@ -110,6 +110,12 @@
     <ClInclude Include="external\stb_image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="graphics\Mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="graphics\Model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\shaders\Basic.shader" />
@@ -120,5 +126,7 @@
     <None Include="assets\shaders\light_shader.vs" />
     <None Include="assets\shaders\shader.fs" />
     <None Include="assets\shaders\shader.vs" />
+    <None Include="assets\shaders\model_test_shader.vs" />
+    <None Include="assets\shaders\model_test_shader.fs" />
   </ItemGroup>
 </Project>

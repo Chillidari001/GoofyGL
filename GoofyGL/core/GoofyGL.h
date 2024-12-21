@@ -1,4 +1,5 @@
-#pragma once
+#ifndef GOOFYGL_H
+#define GOOFYGL_H
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -17,6 +18,7 @@
 #include "glm/gtc/type_ptr.hpp"
 
 #include "../Cameras/Header/ExampleCamera.h"
+#include "../graphics/Model.h"
 
 //glfw shit being weird
 
@@ -49,3 +51,4 @@ private:
 	unsigned int LoadTexture(char const* path);
 };
 
+#endif

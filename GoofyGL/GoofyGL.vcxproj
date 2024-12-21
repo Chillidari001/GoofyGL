@@ -168,6 +168,8 @@
     <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="core\shader_manager.h" />
     <ClInclude Include="external\stb_image.h" />
+    <ClInclude Include="graphics\Mesh.h" />
+    <ClInclude Include="graphics\Model.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="assets\shaders\Basic.shader" />
@@ -176,6 +178,8 @@
     <None Include="assets\shaders\light_cube.vs" />
     <None Include="assets\shaders\light_shader.fs" />
     <None Include="assets\shaders\light_shader.vs" />
+    <None Include="assets\shaders\model_test_shader.fs" />
+    <None Include="assets\shaders\model_test_shader.vs" />
     <None Include="assets\shaders\shader.fs" />
     <None Include="assets\shaders\shader.vs" />
   </ItemGroup>

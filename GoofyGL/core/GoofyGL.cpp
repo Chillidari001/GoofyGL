@@ -38,6 +38,9 @@ GoofyGL::GoofyGL()
 
 	glEnable(GL_DEPTH_TEST);
 
+	// tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
+	stbi_set_flip_vertically_on_load(true);
+
 	//return 0;
 }
 
@@ -57,128 +60,17 @@ void GoofyGL::GoofyGLRun()
 	//------------------------
 	//Shader first_shader("shader.vs", "shader.fs");
 	Shader lighting_shader("assets/shaders/light_shader.vs", "assets/shaders/light_shader.fs");
-	Shader light_cube_shader("assets/shaders/light_cube.vs", "assets/shaders/light_cube.fs");
+	//Shader light_cube_shader("assets/shaders/light_cube.vs", "assets/shaders/light_cube.fs");
+	//Shader model_loading_shader("assets/shaders/model_test_shader.vs", "assets/shaders/model_test_shader.fs");
+
+	//load models
+	Model first_model("assets/models/backpack/backpack.obj");
 
 	//set up vertex data and buffers and configure vertex attributes
 	//glViewport(0, 0, 800, 600);
-	GLfloat vertices[] = {
-		// positions          // normals           // texture coords
-		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
 
-		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
-	};
-
-	glm::vec3 cube_positions[] = {
-	glm::vec3(0.0f,  0.0f,  0.0f),
-	glm::vec3(2.0f,  5.0f, -15.0f),
-	glm::vec3(-1.5f, -2.2f, -2.5f),
-	glm::vec3(-3.8f, -2.0f, -12.3f),
-	glm::vec3(2.4f, -0.4f, -3.5f),
-	glm::vec3(-1.7f,  3.0f, -7.5f),
-	glm::vec3(1.3f, -2.0f, -2.5f),
-	glm::vec3(1.5f,  2.0f, -2.5f),
-	glm::vec3(1.5f,  0.2f, -1.5f),
-	glm::vec3(-1.3f,  1.0f, -1.5f)
-	};
-
-	glm::vec3 point_lights_positions[] = {
-	glm::vec3(0.7f,  0.2f,  2.0f),
-	glm::vec3(2.3f, -3.3f, -4.0f),
-	glm::vec3(-4.0f,  2.0f, -12.0f),
-	glm::vec3(0.0f,  0.0f, -3.0f)
-	};
-
-	//vertex buffer object (VBO) is where we hold vertex data that is sent to the gpu. VBOs can hold a 
-	//large number of vertices in GPU memory
-	//vertex array object (VAO) holds pointers to the VBO(s) and tells opengl how to interpret them
-	//they allow us to quickly switch between different VBOs
-	GLuint VBO, VAO; //cube vao, vbo
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	//this store vertices in the VBO
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-
-	glBindVertexArray(VAO);
-
-	//comment out ebo as we dont need them to draw 2 triangles, used them before to draw rectangle as we didn't want overhead
-	//of specifying the same vertices. ebo only stores the vertices needed and let us dictate the order of drawing, so there was no overhead
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-	//position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	// normal attribute
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	//texture coord attribute
-	// normal attribute
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-
-	//colour attribs
-	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3* sizeof(float)));
-	//glEnableVertexAttribArray(1);
-
-	//texture coord attribs
-	//glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-	//glEnableVertexAttribArray(2);
-
-	//configure the light's VAO (VBO stays the same; the vertices are the same for the light object which is also a 3D cube)
-	unsigned int light_cubeVAO;
-	glGenVertexArrays(1, &light_cubeVAO);
-	glBindVertexArray(light_cubeVAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-	//position attribs again for light cube (i think)
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-
-	unsigned int diffuse_map = LoadTexture("assets/textures/container2.png");
-	unsigned int specular_map = LoadTexture("assets/textures/container2_specular.png");
-
+	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	
 	//imgui test
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
@@ -187,10 +79,19 @@ void GoofyGL::GoofyGLRun()
 	ImGui_ImplOpenGL3_Init("#version 330");
 
 	//variables to manipulate in imgui window
-	float light_linear = 0.09f;
-	float light_quadratic = 0.032f;
-	glm::vec3 _light_pos = glm::vec3(1.2f, 1.0f, 2.0f);
+	glm::vec3 point_lights_ambient = glm::vec3(0.05f, 0.05f, 0.05f);
+	glm::vec3 point_lights_diffuse = glm::vec3(0.8f, 0.8f, 0.8f);
+	glm::vec3 point_lights_specular = glm::vec3(1.0f, 1.0f, 1.0f);
+	float point_lights_constant = 1.0f;
+	float point_lights_linear = 0.09f;
+	float point_lights_quadratic = 0.032f;
 
+	glm::vec3 point_lights_positions[] = {
+	glm::vec3(0.7f,  0.2f,  2.0f),
+	glm::vec3(2.3f, -3.3f, -4.0f),
+	glm::vec3(-4.0f,  2.0f, -12.0f),
+	glm::vec3(0.0f,  0.0f, -3.0f)
+	};
 
 
 	while (!glfwWindowShouldClose(window))
@@ -215,28 +116,16 @@ void GoofyGL::GoofyGLRun()
 		glClearColor(0.00f, 0.00f, 0.00f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		//model_loading_shader.Use();
+
 		//tell opengl a new frame is about to begin
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 
-		//glBindVertexArray(VAO);
-
-		//activate shader when setting uniforms/drawing objects
 		lighting_shader.Use();
-		//glUniform1i(glGetUniformLocation(lighting_shader.ID, "object_color"), 1); // set it manually
-		//lighting_shader.SetVec3("object_color", glm::vec3(1.0f, 0.5f, 0.31f));
-		//lighting_shader.SetVec3("light_color", glm::vec3(1.0f, 1.0f, 1.0f));
-		
-		
-		lighting_shader.SetVec3("view_pos", main_camera.position);
 
-		glm::vec3 light_color;
-		light_color.x = sin(glfwGetTime() * 2.0f);
-		light_color.y = sin(glfwGetTime() * 0.7f);
-		light_color.z = sin(glfwGetTime() * 1.3f);
-		glm::vec3 diffuse_color = light_color * glm::vec3(0.5f);
-		glm::vec3 ambient_color = diffuse_color * glm::vec3(0.2f);
+		lighting_shader.SetVec3("view_pos", main_camera.position);
 
 		//set values of properties in the different light structs
 		//directional light
@@ -250,15 +139,16 @@ void GoofyGL::GoofyGLRun()
 		{
 			std::string number = std::to_string(i);
 			lighting_shader.SetVec3("point_lights[" + number + "].position", point_lights_positions[i]);
-			lighting_shader.SetVec3("point_lights[" + number + "].ambient", glm::vec3(0.05f, 0.05f, 0.05f));
-			lighting_shader.SetVec3("point_lights[" + number + "].diffuse", glm::vec3(0.8f, 0.8f, 0.8f));
-			lighting_shader.SetVec3("point_lights[" + number + "].specular", glm::vec3(1.0f, 1.0f, 1.0f));
-			lighting_shader.SetFloat("point_lights[" + number + "].constant", 1.0f);
-			lighting_shader.SetFloat("point_lights[" + number + "].linear", 0.09f);
-			lighting_shader.SetFloat("point_lights[" + number + "].quadratic", 0.032f);
+			lighting_shader.SetVec3("point_lights[" + number + "].ambient", point_lights_ambient);
+			lighting_shader.SetVec3("point_lights[" + number + "].diffuse", point_lights_diffuse);
+			lighting_shader.SetVec3("point_lights[" + number + "].specular", point_lights_specular);
+			lighting_shader.SetFloat("point_lights[" + number + "].constant", point_lights_constant);
+			lighting_shader.SetFloat("point_lights[" + number + "].linear", point_lights_linear);
+			lighting_shader.SetFloat("point_lights[" + number + "].quadratic", point_lights_quadratic);
 		}
 
 		//spotlight
+		
 		lighting_shader.SetVec3("spot_light.position", main_camera.position);
 		lighting_shader.SetVec3("spot_light.direction", main_camera.front);
 		lighting_shader.SetVec3("spot_light.ambient", glm::vec3(0.00f, 0.00f, 0.00f));
@@ -277,55 +167,16 @@ void GoofyGL::GoofyGLRun()
 		lighting_shader.SetInt("material.specular", 1);
 		lighting_shader.SetFloat("material.shininess", 32.0f);
 
-		//latest camera stuff
-		//pass projection matrix to shader, can change every frame
-		glm::mat4 projection = glm::perspective(glm::radians(main_camera.zoom), (float)screen_width / (float)screen_height, 0.1f, 100.0f); //fov, aspect ratio, near, far
-		lighting_shader.SetMat4("projection", projection); //currently projection matrix is set each frame, but since the projection matrix rarely changes it's often best practice to set it outside the main loop only once.
-		//camera/view transformation
+		glm::mat4 projection = glm::perspective(glm::radians(main_camera.zoom), (float)screen_width / (float)screen_height, 0.1f, 100.0f);
 		glm::mat4 view = main_camera.GetViewMatrix();
+		lighting_shader.SetMat4("projection", projection);
 		lighting_shader.SetMat4("view", view);
 
-		//world transformation
 		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
+		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// model is a bit too big for the scene, so scale it down
 		lighting_shader.SetMat4("model", model);
-
-		//bind diffuse map
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, diffuse_map);
-
-		//bind diffuse map
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, specular_map);
-
-		//render multiple cubes
-		glBindVertexArray(VAO);
-		for (unsigned int i = 0; i < 10; i++)
-		{
-			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, cube_positions[i]);
-			float angle = 20.0f * i;
-			model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-			lighting_shader.SetMat4("model", model);
-
-			glDrawArrays(GL_TRIANGLES, 0, 36);
-		}
-
-
-		//render cube
-		//glBindVertexArray(VAO);
-		//glDrawArrays(GL_TRIANGLES, 0, 36);
-
-		//then draw "lamp" object
-		light_cube_shader.Use();
-		light_cube_shader.SetMat4("projection", projection);
-		light_cube_shader.SetMat4("view", view);
-		model = glm::mat4(1.0f);
-		model = glm::translate(model, light_pos);
-		model = glm::scale(model, glm::vec3(0.2f)); //a smaller cube
-		light_cube_shader.SetMat4("model", model);
-
-		glBindVertexArray(light_cubeVAO);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		first_model.Draw(lighting_shader);
 
 		//glBindVertexArray(0); //no need to unbind everytime
 		//check and poll IO events and swap front and back buffer
@@ -333,17 +184,13 @@ void GoofyGL::GoofyGLRun()
 		//imgui window creation, name and features (text, checkbox etc.)
 		ImGui::Begin("Test Window");
 		ImGui::Text("Hello GoofyGL");
-		ImGui::SliderFloat("Light Linear", &light_linear, 0.0f, 2.0f);
-		ImGui::SliderFloat("Light Quadratic", &light_quadratic, 0.0f, 2.0f);
-		ImGui::Text("Linear: %.3f", light_linear);
-		ImGui::Text("Quadratic: %.3f", light_quadratic);
-		ImGui::SliderFloat3("Light Position", &light_pos[0], -10.0f, 100.0f);
+		ImGui::SliderFloat3("Point Lights ambient", glm::value_ptr(point_lights_ambient), 0.0f, 1.0f);
+		ImGui::SliderFloat3("Point Lights diffuse", glm::value_ptr(point_lights_diffuse), 0.0f, 1.0f);
+		ImGui::SliderFloat3("Point Lights specular", glm::value_ptr(point_lights_specular), 0.0f, 1.0f);
+		ImGui::SliderFloat("Point Lights constant", &point_lights_constant, 0.0f, 1.0f);
+		ImGui::SliderFloat("Point Lights linear", &point_lights_linear, 0.0f, 1.0f);
+		ImGui::SliderFloat("Point Lights quadratic", &point_lights_quadratic, 0.0f, 1.0f);
 		ImGui::End();
-
-		//export variables to shader
-		//glUseProgram(shader_program);
-		//glUniform1f(glGetUniformLocation(shader_program, "size"), size);
-		//glUniform4f(glGetUniformLocation(shader_program, "color"), color[0], color[1], color[2], color[3]);
 
 		//render imgui elements
 		ImGui::Render();
@@ -359,9 +206,9 @@ void GoofyGL::GoofyGLRun()
 	ImGui::DestroyContext();
 
 	//delete all created objects
-	glDeleteVertexArrays(1, &VAO);
-	glDeleteVertexArrays(1, &light_cubeVAO);
-	glDeleteBuffers(1, &VBO);
+	//glDeleteVertexArrays(1, &VAO);
+	//glDeleteVertexArrays(1, &light_cubeVAO);
+	//glDeleteBuffers(1, &VBO);
 	//glDeleteProgram(shader_program);
 
 	//glfwterminate clearing all previously allocated glfw resources
