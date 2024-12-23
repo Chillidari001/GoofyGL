@@ -157,6 +157,7 @@
     <ClInclude Include="Cameras\Header\Camera.h" />
     <ClInclude Include="Cameras\Header\ExampleCamera.h" />
     <ClInclude Include="core\GoofyGL.h" />
+    <ClInclude Include="graphics\Material.h" />
     <ClInclude Include="imgui\imconfig.h" />
     <ClInclude Include="imgui\imgui.h" />
     <ClInclude Include="imgui\imgui_impl_glfw.h" />

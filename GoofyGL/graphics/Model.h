@@ -33,7 +33,14 @@ private:
 	void LoadModel(std::string path)
 	{
 		Assimp::Importer importer;
-		const aiScene* scene = importer.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+		const aiScene* scene = importer.ReadFile(path, 
+			aiProcess_Triangulate 
+			| aiProcess_FlipUVs
+			|aiProcess_OptimizeMeshes //further optimization after FlipUVs, can disable for performance
+			|aiProcess_OptimizeGraph //can disable for performance
+			|aiProcess_JoinIdenticalVertices //can disable for performance
+			|aiProcess_ValidateDataStructure //can disable for performance
+			|aiProcess_GenSmoothNormals);
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 		{
 			std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
@@ -57,11 +64,13 @@ private:
 			ProcessNode(node->mChildren[i], scene);
 		}
 	}
+
 	Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene)
 	{
 		std::vector<Vertex> vertices;
 		std::vector<unsigned int> indices;
 		std::vector<Texture> textures;
+		Material material_data;
 
 		for (unsigned int i = 0; i < mesh->mNumVertices; i++)
 		{
@@ -106,22 +115,52 @@ private:
 		if (mesh->mMaterialIndex >= 0)
 		{
 			aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
+			//load diffuse textures
 			std::vector<Texture> diffuse_maps = LoadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
 			textures.insert(textures.end(), diffuse_maps.begin(), diffuse_maps.end());
+			//load specular textures
 			std::vector<Texture> specular_maps = LoadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
 			textures.insert(textures.end(), specular_maps.begin(), specular_maps.end());
+
+			// load color-based material data
+			material_data = LoadMaterial(material);
+		}
+		else
+		{
+			material_data.ambient = glm::vec3(0.2f);
+			material_data.diffuse = glm::vec3(0.8f);
+			material_data.specular = glm::vec3(1.0f);
+			material_data.shininess = 32.0f;
 		}
 
-		return Mesh(vertices, indices, textures);
+		std::cout << "Vertices: " << vertices.size() << ", Indices: " << indices.size() << std::endl;
+
+		/*std::cout << "Vertices:" << std::endl;
+		for (size_t i = 0; i < vertices.size(); ++i) {
+			std::cout << "Position: " << vertices[i].position.x << ", "
+				<< vertices[i].position.y << ", " << vertices[i].position.z << std::endl;
+		}
+
+		std::cout << "Indices:" << std::endl;
+		for (size_t i = 0; i < indices.size(); ++i) {
+			std::cout << indices[i] << " ";
+		}
+		std::cout << std::endl;*/
+
+		return Mesh(vertices, indices, textures, material_data);
 	}
+
 	std::vector<Texture> LoadMaterialTextures(aiMaterial* material, aiTextureType type, std::string type_name)
 	{
 		//check if texture is already loaded and in loaded textures vector, if it is skip if not load and then add to vector
 		std::vector<Texture> textures;
-		for (unsigned int i = 0; i < material->GetTextureCount(type); i++)
+		unsigned int texture_count = material->GetTextureCount(type);
+		for (unsigned int i = 0; i < texture_count; i++)
 		{
 			aiString str;
 			material->GetTexture(type, i, &str);
+
+			//check if texture is already loaded and in loaded textures vector, if it is skip if not load and then add to vector
 			bool skip = false;
 			for (unsigned int j = 0; j < loaded_textures.size(); j++)
 			{
@@ -140,8 +179,32 @@ private:
 				texture.path = str.C_Str();
 				textures.push_back(texture);
 				loaded_textures.push_back(texture);
+
+				std::cout << "Attempting to load texture: " << str.C_Str()
+					<< " from directory: " << directory << std::endl;
 			}
 		}
+
+		if (texture_count == 0)
+		{
+			unsigned int whiteTex = CreateWhiteTexture();
+
+			Texture fallback_texture;
+			fallback_texture.id = whiteTex;
+			fallback_texture.type = type_name;
+			fallback_texture.path = "fallback_white";
+
+			textures.push_back(fallback_texture);
+
+			// (Optionally) do NOT push it into loaded_textures,
+			// so each material that has no real texture 
+			// gets the fallback separately. 
+			// Or do push it if you want them to share.
+			// loaded_textures.push_back(fallbackTexture);
+
+			std::cout << "No " << type_name << " found. Using fallback white texture." << std::endl;
+		}
+
 		return textures;
 	}
 	
@@ -186,6 +249,65 @@ private:
 		return textureID;
 	}
 	
+	Material LoadMaterial(aiMaterial* mat)
+    {
+        Material material;
+        aiColor3D color(0.f, 0.f, 0.f);
+        float shininess = 0.0f;
+
+        // diffuse
+        if (mat->Get(AI_MATKEY_COLOR_DIFFUSE, color) == AI_SUCCESS)
+            material.diffuse = glm::vec3(color.r, color.g, color.b);
+        else
+            material.diffuse = glm::vec3(0.8f);
+
+        // ambient
+        if (mat->Get(AI_MATKEY_COLOR_AMBIENT, color) == AI_SUCCESS)
+            material.ambient = glm::vec3(color.r, color.g, color.b);
+        else
+            material.ambient = glm::vec3(0.2f);
+
+        // specular
+        if (mat->Get(AI_MATKEY_COLOR_SPECULAR, color) == AI_SUCCESS)
+            material.specular = glm::vec3(color.r, color.g, color.b);
+        else
+            material.specular = glm::vec3(1.0f);
+
+        // shininess
+        if (mat->Get(AI_MATKEY_SHININESS, shininess) == AI_SUCCESS)
+            material.shininess = shininess;
+        else
+            material.shininess = 32.0f;
+
+        return material;
+    }
+
+	static unsigned int CreateWhiteTexture()
+	{
+		static bool created = false;
+		static unsigned int white_texture_id = 0;
+
+		if (!created)
+		{
+			//a single white pixel: RGBA = 255,255,255,255
+			unsigned char white_pixel[4] = { 255, 255, 255, 255 };
+
+			glGenTextures(1, &white_texture_id);
+			glBindTexture(GL_TEXTURE_2D, white_texture_id);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0,
+				GL_RGBA, GL_UNSIGNED_BYTE, white_pixel);
+
+			glGenerateMipmap(GL_TEXTURE_2D);
+
+			// set wrap/filter modes as you wish
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+			created = true;
+		}
+		return white_texture_id;
+	}
 };
 #endif
-

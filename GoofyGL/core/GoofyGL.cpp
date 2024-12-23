@@ -64,7 +64,9 @@ void GoofyGL::GoofyGLRun()
 	//Shader model_loading_shader("assets/shaders/model_test_shader.vs", "assets/shaders/model_test_shader.fs");
 
 	//load models
-	Model first_model("assets/models/backpack/backpack.obj");
+	//Model first_model("assets/models/backpack/backpack.obj");
+	Model first_model("assets/models/cottage/cottage_obj.obj");
+	//Model first_model("assets/models/car/mustang.obj");
 
 	//set up vertex data and buffers and configure vertex attributes
 	//glViewport(0, 0, 800, 600);
@@ -85,6 +87,7 @@ void GoofyGL::GoofyGLRun()
 	float point_lights_constant = 1.0f;
 	float point_lights_linear = 0.09f;
 	float point_lights_quadratic = 0.032f;
+	bool wireframe_mode = false;
 
 	glm::vec3 point_lights_positions[] = {
 	glm::vec3(0.7f,  0.2f,  2.0f),
@@ -93,6 +96,8 @@ void GoofyGL::GoofyGLRun()
 	glm::vec3(0.0f,  0.0f, -3.0f)
 	};
 
+	//glDisable(GL_CULL_FACE);
+	//glFrontFace(GL_CCW);
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -172,14 +177,26 @@ void GoofyGL::GoofyGLRun()
 		lighting_shader.SetMat4("projection", projection);
 		lighting_shader.SetMat4("view", view);
 
+		lighting_shader.SetBool("wireframe", wireframe_mode);
+
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
 		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// model is a bit too big for the scene, so scale it down
+		//model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
 		lighting_shader.SetMat4("model", model);
 		first_model.Draw(lighting_shader);
 
 		//glBindVertexArray(0); //no need to unbind everytime
 		//check and poll IO events and swap front and back buffer
+
+		if (wireframe_mode)
+		{
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		}
+		else
+		{
+			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		}
 
 		//imgui window creation, name and features (text, checkbox etc.)
 		ImGui::Begin("Test Window");
@@ -190,6 +207,7 @@ void GoofyGL::GoofyGLRun()
 		ImGui::SliderFloat("Point Lights constant", &point_lights_constant, 0.0f, 1.0f);
 		ImGui::SliderFloat("Point Lights linear", &point_lights_linear, 0.0f, 1.0f);
 		ImGui::SliderFloat("Point Lights quadratic", &point_lights_quadratic, 0.0f, 1.0f);
+		ImGui::Checkbox("Wireframe mode", &wireframe_mode);
 		ImGui::End();
 
 		//render imgui elements

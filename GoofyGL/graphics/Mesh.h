@@ -6,6 +6,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "../core/shader_manager.h"
+#include "Material.h"
 
 #include <string>
 #include <vector>
@@ -30,14 +31,18 @@ public:
 	std::vector<unsigned int> indices;
 	std::vector<Texture> textures;
 
-	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures)
+	Material material;
+
+	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures, const Material& material)
 	{
 		this->vertices = vertices;
 		this->indices = indices;
 		this->textures = textures;
+		this->material = material;
 
 		SetupMesh();
 	}
+
 	void Draw(Shader& shader)
 	{
 		unsigned int diffuseNumber = 1;
@@ -60,6 +65,11 @@ public:
 			glBindTexture(GL_TEXTURE_2D, textures[i].id);
 		}
 		glActiveTexture(GL_TEXTURE0);
+
+		shader.SetVec3("material.diffuse_color", material.diffuse);
+		shader.SetVec3("material.ambient_color", material.ambient);
+		shader.SetVec3("material.specular_color", material.specular);
+		shader.SetFloat("material.shininess", material.shininess);
 
 		//draw the mesh
 		glBindVertexArray(VAO);
