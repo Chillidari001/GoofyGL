@@ -20,7 +20,11 @@
 #include "../Cameras/Header/ExampleCamera.h"
 #include "../graphics/Model.h"
 
-//glfw shit being weird
+#ifdef _WIN32
+#include <windows.h>
+#include <pdh.h>
+#pragma comment(lib, "pdh.lib")
+#endif
 
 
 class GoofyGL
@@ -49,6 +53,20 @@ private:
 	static void ScrollCallback(GLFWwindow* _window, double _xoffset, double _yoffset);
 	void ProcessInput(GLFWwindow* _window);
 	unsigned int LoadTexture(char const* path);
+
+	//fps and performance shit
+	float fps = 0.0f;
+	float frame_time = 0.0f;
+	float cpu_usage = 0.0f;
+	//float gpu_usage = 0.0f;
+
+#ifdef _WIN32
+	PDH_HQUERY cpu_query;
+	PDH_HCOUNTER cpu_counter;
+#endif
+
+	void InitPerformanceStats();
+	void UpdatePerformanceStats();
 };
 
 #endif

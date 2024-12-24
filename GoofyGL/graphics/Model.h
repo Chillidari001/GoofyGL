@@ -36,10 +36,10 @@ private:
 		const aiScene* scene = importer.ReadFile(path, 
 			aiProcess_Triangulate 
 			| aiProcess_FlipUVs
-			|aiProcess_OptimizeMeshes //further optimization after FlipUVs, can disable for performance
-			|aiProcess_OptimizeGraph //can disable for performance
-			|aiProcess_JoinIdenticalVertices //can disable for performance
-			|aiProcess_ValidateDataStructure //can disable for performance
+			//|aiProcess_OptimizeMeshes //further optimization after FlipUVs, can disable for performance
+			//|aiProcess_OptimizeGraph //can disable for performance
+			//|aiProcess_JoinIdenticalVertices //can disable for performance
+			//|aiProcess_ValidateDataStructure //can disable for performance
 			|aiProcess_GenSmoothNormals);
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 		{
@@ -52,6 +52,7 @@ private:
 	}
 	void ProcessNode(aiNode* node, const aiScene* scene)
 	{
+		meshes.reserve(node->mNumMeshes);
 		//process all the node's meshes
 		for (unsigned int i = 0; i < node->mNumMeshes; i++)
 		{
@@ -68,7 +69,9 @@ private:
 	Mesh ProcessMesh(aiMesh* mesh, const aiScene* scene)
 	{
 		std::vector<Vertex> vertices;
+		vertices.reserve(mesh->mNumVertices);
 		std::vector<unsigned int> indices;
+		indices.reserve(mesh->mNumFaces * 3); //triangulated faces due to assimp triangulate flag
 		std::vector<Texture> textures;
 		Material material_data;
 

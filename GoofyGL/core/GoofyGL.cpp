@@ -37,10 +37,12 @@ GoofyGL::GoofyGL()
 	}
 
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_CLAMP);
 
 	// tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
 	stbi_set_flip_vertically_on_load(true);
 
+	InitPerformanceStats();
 	//return 0;
 }
 
@@ -65,8 +67,9 @@ void GoofyGL::GoofyGLRun()
 
 	//load models
 	//Model first_model("assets/models/backpack/backpack.obj");
-	Model first_model("assets/models/cottage/cottage_obj.obj");
+	//Model first_model("assets/models/cottage/cottage_obj.obj");
 	//Model first_model("assets/models/car/mustang.obj");
+	Model first_model("assets/models/Sponza-master/sponza.obj");
 
 	//set up vertex data and buffers and configure vertex attributes
 	//glViewport(0, 0, 800, 600);
@@ -172,7 +175,7 @@ void GoofyGL::GoofyGLRun()
 		lighting_shader.SetInt("material.specular", 1);
 		lighting_shader.SetFloat("material.shininess", 32.0f);
 
-		glm::mat4 projection = glm::perspective(glm::radians(main_camera.zoom), (float)screen_width / (float)screen_height, 0.1f, 100.0f);
+		glm::mat4 projection = glm::perspective(glm::radians(main_camera.zoom), (float)screen_width / (float)screen_height, 0.1f, 1000.0f);
 		glm::mat4 view = main_camera.GetViewMatrix();
 		lighting_shader.SetMat4("projection", projection);
 		lighting_shader.SetMat4("view", view);
@@ -181,8 +184,8 @@ void GoofyGL::GoofyGLRun()
 
 		glm::mat4 model = glm::mat4(1.0f);
 		model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-		model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// model is a bit too big for the scene, so scale it down
-		//model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
+		//model = glm::scale(model, glm::vec3(1.0f, 1.0f, 1.0f));	// model is a bit too big for the scene, so scale it down
+		model = glm::scale(model, glm::vec3(0.3f, 0.3f, 0.3f));
 		lighting_shader.SetMat4("model", model);
 		first_model.Draw(lighting_shader);
 
@@ -198,16 +201,29 @@ void GoofyGL::GoofyGLRun()
 			glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		}
 
+		UpdatePerformanceStats();
+
 		//imgui window creation, name and features (text, checkbox etc.)
 		ImGui::Begin("Test Window");
 		ImGui::Text("Hello GoofyGL");
-		ImGui::SliderFloat3("Point Lights ambient", glm::value_ptr(point_lights_ambient), 0.0f, 1.0f);
-		ImGui::SliderFloat3("Point Lights diffuse", glm::value_ptr(point_lights_diffuse), 0.0f, 1.0f);
-		ImGui::SliderFloat3("Point Lights specular", glm::value_ptr(point_lights_specular), 0.0f, 1.0f);
-		ImGui::SliderFloat("Point Lights constant", &point_lights_constant, 0.0f, 1.0f);
-		ImGui::SliderFloat("Point Lights linear", &point_lights_linear, 0.0f, 1.0f);
-		ImGui::SliderFloat("Point Lights quadratic", &point_lights_quadratic, 0.0f, 1.0f);
-		ImGui::Checkbox("Wireframe mode", &wireframe_mode);
+		if (ImGui::TreeNode("Performance"))
+		{
+			ImGui::Text("FPS: %.1f", fps);
+			ImGui::Text("Frame time: %.2f ms", frame_time);
+			ImGui::Text("CPU usage: %.1f%%", cpu_usage);
+			ImGui::TreePop();
+		}
+		if (ImGui::TreeNode("Other shit"))
+		{
+			ImGui::SliderFloat3("Point Lights ambient", glm::value_ptr(point_lights_ambient), 0.0f, 1.0f);
+			ImGui::SliderFloat3("Point Lights diffuse", glm::value_ptr(point_lights_diffuse), 0.0f, 1.0f);
+			ImGui::SliderFloat3("Point Lights specular", glm::value_ptr(point_lights_specular), 0.0f, 1.0f);
+			ImGui::SliderFloat("Point Lights constant", &point_lights_constant, 0.0f, 1.0f);
+			ImGui::SliderFloat("Point Lights linear", &point_lights_linear, 0.0f, 1.0f);
+			ImGui::SliderFloat("Point Lights quadratic", &point_lights_quadratic, 0.0f, 1.0f);
+			ImGui::Checkbox("Wireframe mode", &wireframe_mode);
+			ImGui::TreePop();
+		}
 		ImGui::End();
 
 		//render imgui elements
@@ -332,4 +348,44 @@ unsigned int GoofyGL::LoadTexture(char const * path)
 	}
 
 	return texture_id;
+}
+
+void GoofyGL::InitPerformanceStats()
+{
+	#ifdef _WIN32
+	// convert string to a wide string
+	std::wstring cpu_counter_path = L"\\Processor(_Total)\\% processor time";
+	PdhAddCounter(cpu_query, cpu_counter_path.c_str(), NULL, &cpu_counter);
+	PdhCollectQueryData(cpu_query);
+	#endif
+}
+
+void GoofyGL::UpdatePerformanceStats()
+{
+	//update fps and frame tim
+	static int frame_count = 0;
+	static float time_sum = 0.0f;
+	static float last_update = glfwGetTime();
+
+	float current_time = glfwGetTime();
+	frame_count++;
+	time_sum += delta_time;
+
+	if (current_time - last_update >= 1.0f)
+	{
+		fps = static_cast<float>(frame_count);
+		frame_time = (time_sum * 1000.0f) / frame_count; // Convert to milliseconds
+
+		frame_count = 0;
+		time_sum = 0.0f;
+		last_update = current_time;
+
+		// Update CPU usage
+		#ifdef _WIN32
+		PDH_FMT_COUNTERVALUE counterVal;
+		PdhCollectQueryData(cpu_query);
+		PdhGetFormattedCounterValue(cpu_counter, PDH_FMT_DOUBLE, NULL, &counterVal);
+		cpu_usage = static_cast<float>(counterVal.doubleValue);
+		#endif
+	}
 }
