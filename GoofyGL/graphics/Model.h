@@ -4,6 +4,8 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include "../external/stb_image.h"
+#include <unordered_map>
+#include <chrono>
 
 #ifndef MODEL_H
 #define MODEL_H
@@ -11,8 +13,6 @@
 class Model
 {
 public:
-
-	std::vector<Texture> loaded_textures;
 
 	Model(const std::string &path)
 	{
@@ -29,9 +29,13 @@ private:
 	//model data
 	std::vector<Mesh> meshes;
 	std::string directory;
+	//std::vector<Texture> loaded_textures;
+	std::unordered_map<std::string, Texture> texture_cache;
 
 	void LoadModel(std::string path)
 	{
+		std::cout << "Starting model load..." << std::endl;
+
 		Assimp::Importer importer;
 		const aiScene* scene = importer.ReadFile(path, 
 			aiProcess_Triangulate 
@@ -155,57 +159,43 @@ private:
 
 	std::vector<Texture> LoadMaterialTextures(aiMaterial* material, aiTextureType type, std::string type_name)
 	{
-		//check if texture is already loaded and in loaded textures vector, if it is skip if not load and then add to vector
 		std::vector<Texture> textures;
 		unsigned int texture_count = material->GetTextureCount(type);
 		for (unsigned int i = 0; i < texture_count; i++)
 		{
 			aiString str;
 			material->GetTexture(type, i, &str);
+			std::string full_path = directory + '/' + str.C_Str();
 
-			//check if texture is already loaded and in loaded textures vector, if it is skip if not load and then add to vector
-			bool skip = false;
-			for (unsigned int j = 0; j < loaded_textures.size(); j++)
+			// Check texture cache first
+			auto cached = texture_cache.find(full_path);
+			if (cached != texture_cache.end())
 			{
-				if (std::strcmp(loaded_textures[j].path.c_str(), str.C_Str()) == 0)
-				{
-					textures.push_back(loaded_textures[j]);
-					skip = true;
-					break;
-				}
+				textures.push_back(cached->second);
+				std::cout << "Using cached texture: " << full_path << std::endl;
+				continue;
 			}
-			if (!skip)
-			{
-				Texture texture;
-				texture.id = TextureFromFile(str.C_Str(), directory);
-				texture.type = type_name;
-				texture.path = str.C_Str();
-				textures.push_back(texture);
-				loaded_textures.push_back(texture);
 
-				std::cout << "Attempting to load texture: " << str.C_Str()
-					<< " from directory: " << directory << std::endl;
-			}
+			// If not in cache, load new texture
+			Texture texture;
+			texture.id = TextureFromFile(str.C_Str(), directory);
+			texture.type = type_name;
+			texture.path = str.C_Str();
+			textures.push_back(texture);
+			texture_cache[full_path] = texture;
+
+			std::cout << "Loading new texture: " << full_path << std::endl;
 		}
 
+		// Handle case of no textures
 		if (texture_count == 0)
 		{
-			unsigned int whiteTex = CreateWhiteTexture();
-
+			unsigned int white_texture = CreateWhiteTexture();
 			Texture fallback_texture;
-			fallback_texture.id = whiteTex;
+			fallback_texture.id = white_texture;
 			fallback_texture.type = type_name;
 			fallback_texture.path = "fallback_white";
-
 			textures.push_back(fallback_texture);
-
-			// (Optionally) do NOT push it into loaded_textures,
-			// so each material that has no real texture 
-			// gets the fallback separately. 
-			// Or do push it if you want them to share.
-			// loaded_textures.push_back(fallbackTexture);
-
-			std::cout << "No " << type_name << " found. Using fallback white texture." << std::endl;
 		}
 
 		return textures;
@@ -214,8 +204,7 @@ private:
 	//uses stb_image to load a texture
 	unsigned int TextureFromFile(const char* path, const std::string& directory)
 	{
-		std::string filename = std::string(path);
-		filename = directory + '/' + filename;
+		std::string filename = directory + '/' + std::string(path);
 
 		unsigned int textureID;
 		glGenTextures(1, &textureID);
@@ -224,13 +213,9 @@ private:
 		unsigned char* data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
 		if (data)
 		{
-			GLenum format;
-			if (nrComponents == 1)
-				format = GL_RED;
-			else if (nrComponents == 3)
-				format = GL_RGB;
-			else if (nrComponents == 4)
-				format = GL_RGBA;
+			GLenum format = nrComponents == 1 ? GL_RED :
+				nrComponents == 3 ? GL_RGB :
+				nrComponents == 4 ? GL_RGBA : GL_RGB;
 
 			glBindTexture(GL_TEXTURE_2D, textureID);
 			glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
@@ -245,8 +230,9 @@ private:
 		}
 		else
 		{
-			std::cout << "Texture failed to load at path: " << path << std::endl;
+			std::cout << "Texture failed to load at path: " << filename << std::endl;
 			stbi_image_free(data);
+			return 0;
 		}
 
 		return textureID;

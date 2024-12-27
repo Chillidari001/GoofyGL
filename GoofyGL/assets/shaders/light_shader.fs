@@ -97,9 +97,6 @@ void main()
         frag_color = vec4(result, 1.0);
 }
 
-// ------------------------------------------------------------------------
-// DIRECTIONAL LIGHT
-// ------------------------------------------------------------------------
 vec3 CalculateDirectionalLight(DirectionalLight light, vec3 normal, vec3 view_dir)
 {
     vec3 light_dir = normalize(-light.direction);
@@ -125,9 +122,6 @@ vec3 CalculateDirectionalLight(DirectionalLight light, vec3 normal, vec3 view_di
     return (ambient + diffuse + specular);
 }
 
-// ------------------------------------------------------------------------
-// POINT LIGHT
-// ------------------------------------------------------------------------
 vec3 CalculatePointLight(PointLight light, vec3 normal, vec3 frag_pos, vec3 view_dir)
 {
     // 1) Light direction & basic diffuse/spec
@@ -159,9 +153,6 @@ vec3 CalculatePointLight(PointLight light, vec3 normal, vec3 frag_pos, vec3 view
     return (ambient + diffuse + specular);
 }
 
-// ------------------------------------------------------------------------
-// SPOT LIGHT
-// ------------------------------------------------------------------------
 vec3 CalculateSpotLight(SpotLight light, vec3 normal, vec3 frag_pos, vec3 view_dir)
 {
     vec3 light_dir = normalize(light.position - frag_pos);
