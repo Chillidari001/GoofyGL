@@ -38,8 +38,9 @@ GoofyGL::GoofyGL()
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_DEPTH_CLAMP);
+	glDepthFunc(GL_LESS);
 
-	// tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
+	//tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
 	stbi_set_flip_vertically_on_load(true);
 
 	InitPerformanceStats();
@@ -69,7 +70,11 @@ void GoofyGL::GoofyGLRun()
 	//Model first_model("assets/models/backpack/backpack.obj");
 	//Model first_model("assets/models/cottage/cottage_obj.obj");
 	//Model first_model("assets/models/car/mustang.obj");
-	Model first_model("assets/models/Sponza-master/sponza.obj");
+	//Model first_model("assets/models/Sponza-master/sponza.obj");
+
+	//new model class with async loading
+	Model first_model;
+	first_model.LoadAsync("assets/models/Sponza-master/sponza.obj");
 
 	//set up vertex data and buffers and configure vertex attributes
 	//glViewport(0, 0, 800, 600);
@@ -130,6 +135,11 @@ void GoofyGL::GoofyGLRun()
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
+
+		if (first_model.IsLoaded())
+		{
+			first_model.CreateGPUResources();
+		}
 
 		lighting_shader.Use();
 
