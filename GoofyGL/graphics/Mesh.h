@@ -18,9 +18,17 @@ struct Vertex {
 };
 
 struct Texture {
-	unsigned int id;
+	//unsigned int id; //async loading means we can't do opengl calls on other threads
+	//only main threads. so we cant use opengl texture id anymore
 	std::string type; //diffuse, specular etc.
 	std::string path;
+
+	std::vector<unsigned char> data;
+	int width = 0;
+	int height = 0;
+	int channels = 0;
+	bool is_loaded = false;
+	unsigned int id = 0; //we will use opengl texture ID on functions called on main thread
 };
 
 class Mesh

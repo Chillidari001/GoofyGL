@@ -41,6 +41,9 @@ public:
 
     //true if the background thread has finished loading.
     bool IsLoaded() const { return loaded; }
+	bool IsGPUResourcesCreated() const { return gpu_resources_created; } //what am i doing rn
+
+    void CheckGPUResources();
 
     void Draw(Shader& shader);
 
@@ -56,21 +59,21 @@ private:
     // If you truly want no GL calls in the worker thread, you can skip this step here
     // and only decode raw data, then finalize textures in CreateGPUResources().
     Texture LoadMaterialTexture(aiMaterial* mat, aiTextureType type, const std::string& type_name, unsigned int index);
-    unsigned int TextureFromFile(const char* path, const std::string& directory);
+    //unsigned int TextureFromFile(const char* path, const std::string& directory);
+    bool LoadTextureData(const char* path, const std::string& directory, Texture& texture);
 
     //fallback placeholder texture if texture is not found
-    static unsigned int CreateWhiteTexture();
+    static Texture CreateWhiteTexture();
 
     Material LoadMaterial(aiMaterial* mat);
 
-private:
     //threading flags
     std::thread load_thread;
     std::atomic<bool> loading_in_progress;
     std::atomic<bool> loaded;
-	bool gpu_resources_created = false;
+    std::atomic<bool> gpu_resources_created; 
 
-    //CPU data populated by worker thread
+    //CPU data populated by load_thread
     CPU_Model_Data cpu_data;
     std::mutex cpu_data_mutex; // protect cpu_data
 

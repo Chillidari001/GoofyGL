@@ -125,6 +125,11 @@ void GoofyGL::GoofyGLRun()
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		}
 
+		if (first_model.IsLoaded() && first_model.IsGPUResourcesCreated())
+		{
+			first_model.CreateGPUResources();
+		}
+
 		//rendering
 		glClearColor(0.00f, 0.00f, 0.00f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -135,11 +140,6 @@ void GoofyGL::GoofyGLRun()
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
-
-		if (first_model.IsLoaded())
-		{
-			first_model.CreateGPUResources();
-		}
 
 		lighting_shader.Use();
 

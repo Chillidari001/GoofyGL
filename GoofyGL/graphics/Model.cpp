@@ -13,6 +13,15 @@ Model::~Model()
 	}
 }
 
+void Model::CheckGPUResources()
+{
+	if (loaded && !gpu_resources_created)
+	{
+		CreateGPUResources();
+		gpu_resources_created = true;
+	}
+}
+
 void Model::LoadAsync(const std::string& path)
 {
     if (loading_in_progress) {
@@ -22,13 +31,14 @@ void Model::LoadAsync(const std::string& path)
 
     loading_in_progress = true;
     loaded = false;
+    gpu_resources_created = false;
 
     //start the worker thread
     load_thread = std::thread([this, path]() 
-        {
+    {
         CPU_Model_Data data = LoadModelData(path);
 
-        //copy to member variale
+        //copy to member variable
         {
             std::lock_guard<std::mutex> lock(this->cpu_data_mutex);
             this->cpu_data = std::move(data);
@@ -36,7 +46,7 @@ void Model::LoadAsync(const std::string& path)
 
         loading_in_progress = false;
         loaded = true;
-        });
+    });
 }
 
 //when done loading, create GPU buffers and textures on main thread
@@ -55,8 +65,35 @@ void Model::CreateGPUResources()
     }
 
 	//for each cpu mesh create a mesh (sets up VAO, VBO, EBO)
+    //and now textures!
     for (auto& cpu_mesh : cpu_data.meshes)
     {
+        for (auto& texture : cpu_mesh.textures) {
+            if (texture.is_loaded && texture.id == 0) {
+                //generate OpenGL texture
+                glGenTextures(1, &texture.id);
+                glBindTexture(GL_TEXTURE_2D, texture.id);
+
+                GLenum format;
+                if (texture.channels == 1)
+                    format = GL_RED;
+                else if (texture.channels == 3)
+                    format = GL_RGB;
+                else if (texture.channels == 4)
+                    format = GL_RGBA;
+                else
+                    format = GL_RGB; //fallback
+
+                glTexImage2D(GL_TEXTURE_2D, 0, format, texture.width, texture.height, 0, format, GL_UNSIGNED_BYTE, texture.data.data());
+                glGenerateMipmap(GL_TEXTURE_2D);
+
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            }
+        }
+
         Mesh mesh(
             cpu_mesh.vertices,
             cpu_mesh.indices,
@@ -75,10 +112,13 @@ void Model::CreateGPUResources()
 
 void Model::Draw(Shader& shader)
 {
-	if (!loaded)
+	if (!gpu_resources_created)
 	{
-		std::cerr << "Model not loaded yet!\n";
-		return;
+		//CheckGPUResources();
+        if (!gpu_resources_created)
+        {
+            return;
+        }
 	}
 
 	//lock gpu meshes to prevent changes while drawing
@@ -198,12 +238,9 @@ void Model::ProcessMesh(aiMesh* mesh, const aiScene* scene, CPU_Model_Data& mode
         //if no textures found, create a fallback white texture
         if (diffuse_count == 0 && specular_count == 0) 
         {
-            unsigned int whiteTexID = CreateWhiteTexture();
-            Texture fallbackTex;
-            fallbackTex.id = whiteTexID;
-            fallbackTex.type = "texture_diffuse";
-            fallbackTex.path = "fallback_white";
-            cpu_mesh.textures.push_back(fallbackTex);
+            //fallback white texture
+            Texture fallback_texture = CreateWhiteTexture();
+            cpu_mesh.textures.push_back(fallback_texture);
         }
     }
     else {
@@ -214,11 +251,7 @@ void Model::ProcessMesh(aiMesh* mesh, const aiScene* scene, CPU_Model_Data& mode
         cpu_mesh.material.shininess = 32.0f;
 
         //fallback white texture
-        unsigned int white_texture_ID = CreateWhiteTexture();
-        Texture fallback_texture;
-        fallback_texture.id = white_texture_ID;
-        fallback_texture.type = "texture_diffuse";
-        fallback_texture.path = "fallback_white";
+        Texture fallback_texture = CreateWhiteTexture();
         cpu_mesh.textures.push_back(fallback_texture);
     }
 
@@ -238,6 +271,8 @@ Texture Model::LoadMaterialTexture(aiMaterial* material, aiTextureType type, con
     material->GetTexture(type, index, &str);
 
     std::string full_path = directory + "/" + str.C_Str();
+    texture.path = full_path;
+	texture.type = type_name;
 
     //check cache first
     auto it = texture_cache.find(full_path);
@@ -245,16 +280,19 @@ Texture Model::LoadMaterialTexture(aiMaterial* material, aiTextureType type, con
         texture = it->second;
     }
     else {
-        texture.id = TextureFromFile(str.C_Str(), directory);
-        texture.type = type_name;
-        texture.path = str.C_Str();
-
-        texture_cache[full_path] = texture;
+        //load and then....
+        if (LoadTextureData(str.C_Str(), directory, texture)) {
+            //store in cache
+            texture_cache[full_path] = texture;
+        }
+        else {
+            //DO SOMETHING!
+        }
     }
     return texture;
 }
 
-unsigned int Model::TextureFromFile(const char* path, const std::string& directory)
+/*unsigned int Model::TextureFromFile(const char* path, const std::string& directory)
 {
     std::string filename = directory + '/' + std::string(path);
 
@@ -294,6 +332,30 @@ unsigned int Model::TextureFromFile(const char* path, const std::string& directo
     }
 
     return textureID;
+}*/
+
+bool Model::LoadTextureData(const char* path, const std::string& directory, Texture& texture)
+{
+	std::string filename = directory + '/' + std::string(path);
+	int width, height, nrChannels;
+	unsigned char* data = stbi_load(filename.c_str(), &width, &height, &nrChannels, 0);
+	if (data)
+	{
+		texture.data.assign(data, data + (width * height * nrChannels));
+		texture.width = width;
+		texture.height = height;
+		texture.channels = nrChannels;
+		texture.is_loaded = true;
+		stbi_image_free(data);
+		return true;
+	}
+	else
+	{
+		std::cerr << "Texture failed to load: " << filename << std::endl;
+		stbi_image_free(data);
+		texture.is_loaded = false;
+		return false;
+	}
 }
 
 
@@ -338,27 +400,18 @@ Material Model::LoadMaterial(aiMaterial* _material)
     return material;
 }
 
-unsigned int Model::CreateWhiteTexture()
+Texture Model::CreateWhiteTexture()
 {
-    static bool created = false;
-    static unsigned int white_texture_id = 0;
+    Texture texture;
+    texture.type = "texture_diffuse";
+    texture.path = "fallback_white";
 
-    if (!created)
-    {
-        //a single white pixel: RGBA = 255,255,255,255
-        unsigned char white_pixel[4] = { 255, 255, 255, 255 };
-        glGenTextures(1, &white_texture_id);
-        glBindTexture(GL_TEXTURE_2D, white_texture_id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, white_pixel);
-        glGenerateMipmap(GL_TEXTURE_2D);
+    //prepare 1x1 white pixel data
+    texture.width = 1;
+    texture.height = 1;
+    texture.channels = 4; // RGBA
+    texture.data = { 255, 255, 255, 255 };
+    texture.is_loaded = true;
 
-        // set wrap/filter modes as you wish
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        created = true;
-    }
-    return white_texture_id;
+    return texture;
 }
