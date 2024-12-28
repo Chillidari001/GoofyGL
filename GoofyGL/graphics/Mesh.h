@@ -58,6 +58,13 @@ public:
 		{
 			glActiveTexture(GL_TEXTURE0 + i); //get active texture unit before binding
 			//get texture number (diffuse_texterNUMBER)
+
+			GLenum error = glGetError();
+			if (error != GL_NO_ERROR)
+			{
+				std::cerr << "OpenGL Error during glActiveTexture in Draw: " << error << std::endl;
+			}
+
 			std::string number;
 			std::string name = textures[i].type;
 			if (name == "texture_diffuse")
@@ -70,6 +77,11 @@ public:
 			}
 			shader.SetInt(("material." + name + number).c_str(), i);
 			glBindTexture(GL_TEXTURE_2D, textures[i].id);
+			error = glGetError();
+			if (error != GL_NO_ERROR)
+			{
+				std::cerr << "OpenGL Error during glBindTexture in Draw: " << error << std::endl;
+			}
 		}
 		glActiveTexture(GL_TEXTURE0);
 
@@ -119,6 +131,12 @@ private:
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, tex_coords));
 
 		glBindVertexArray(0);
+
+		GLenum error = glGetError();
+		if (error != GL_NO_ERROR)
+		{
+			std::cerr << "OpenGL Error during SetupMesh: " << error << std::endl;
+		}
 	}
 };
 

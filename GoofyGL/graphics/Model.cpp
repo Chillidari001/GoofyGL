@@ -72,6 +72,12 @@ void Model::CreateGPUResources()
             if (texture.is_loaded && texture.id == 0) {
                 //generate OpenGL texture
                 glGenTextures(1, &texture.id);
+
+                GLenum error = glGetError();
+                if (error != GL_NO_ERROR)
+                {
+                    std::cerr << "OpenGL Error during glGenTextures in CreateGPUResources: " << error << std::endl;
+                }
                 glBindTexture(GL_TEXTURE_2D, texture.id);
 
                 GLenum format;
