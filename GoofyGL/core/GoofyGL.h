@@ -67,6 +67,16 @@ private:
 
 	void InitPerformanceStats();
 	void UpdatePerformanceStats();
+
+	std::vector<float> GenerateGridVertices(float grid_size, float grid_spacing);
+	void GenerateGrid();
+	unsigned int grid_VAO, grid_VBO;
+	//grid values
+	float grid_size = 100.0f;
+	float grid_spacing = 1.0f;
+	Shader grid_shader;
+
+	bool vertical_sync = true;
 };
 
 #endif

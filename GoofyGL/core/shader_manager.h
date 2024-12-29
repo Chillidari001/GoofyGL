@@ -17,6 +17,8 @@ public:
 
 	//constructor to read and build shader
 	Shader(const char* vertex_path, const char* fragement_path);
+	Shader();
+	~Shader();
 	//use/activate the shader
 	void Use();
 	//utility uniform functions
