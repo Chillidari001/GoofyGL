@@ -28,6 +28,7 @@ GoofyGL::GoofyGL()
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 	glfwSetCursorPosCallback(window, MouseCallback);
 	glfwSetScrollCallback(window, ScrollCallback);
+	glfwSwapInterval(vertical_sync); //enable vsync
 
 	//glad, loading all opengl function pointers
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
@@ -75,6 +76,8 @@ void GoofyGL::GoofyGLRun()
 	//glViewport(0, 0, 800, 600);
 
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+	GenerateGrid();
 	
 	//imgui test
 	IMGUI_CHECKVERSION();
@@ -130,6 +133,33 @@ void GoofyGL::GoofyGLRun()
 		ImGui_ImplOpenGL3_NewFrame();
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
+
+		//can just use same vertex shader but whatever
+		grid_shader.Use();
+		//set transform shit
+		glm::mat4 grid_projection = glm::perspective(glm::radians(main_camera.zoom), (float)screen_width / (float)screen_height, 0.1f, 10000.0f);
+		glm::mat4 grid_view = main_camera.GetViewMatrix();
+		grid_shader.SetMat4("projection", grid_projection);
+		grid_shader.SetMat4("view", grid_view);
+
+		//center grid around camera
+		glm::vec3 camera_position = main_camera.position;
+		glm::mat4 grid_model = glm::mat4(1.0f);
+		grid_model = glm::translate(grid_model, glm::vec3(floor(camera_position.x / grid_spacing) * grid_spacing, 0.0f, floor(camera_position.z / grid_spacing) * grid_spacing));
+		grid_shader.SetMat4("model", grid_model);
+
+		//set grid colour to white
+		grid_shader.SetVec3("grid_color", glm::vec3(1.0f, 1.0f, 1.0f));
+
+		glDepthMask(GL_FALSE);
+
+		//bind and draw grid
+		glBindVertexArray(grid_VAO);
+		int num_of_lines = static_cast<int>((2 * grid_size / grid_spacing) + 1) * 2; //lines parallel to both axes
+		glDrawArrays(GL_LINES, 0, num_of_lines * 2); //each line has 2 vertices
+		glBindVertexArray(0);
+
+		glDepthMask(GL_TRUE);
 
 		lighting_shader.Use();
 
@@ -388,4 +418,56 @@ void GoofyGL::UpdatePerformanceStats()
 		cpu_usage = static_cast<float>(counterVal.doubleValue);
 		#endif
 	}
+}
+
+
+std::vector<float> GoofyGL::GenerateGridVertices(float grid_size, float grid_spacing)
+{
+	std::vector<float> vertices;
+
+	for (float i = -grid_size; i <= grid_size; i += grid_spacing) {
+		//lines parallel to Z-axis
+		vertices.push_back(i);
+		vertices.push_back(0.0f);
+		vertices.push_back(-grid_size);
+
+		vertices.push_back(i);
+		vertices.push_back(0.0f);
+		vertices.push_back(grid_size);
+
+		//lines parallel to X-axis
+		vertices.push_back(-grid_size);
+		vertices.push_back(0.0f);
+		vertices.push_back(i);
+
+		vertices.push_back(grid_size);
+		vertices.push_back(0.0f);
+		vertices.push_back(i);
+	}
+
+	return vertices;
+}
+
+void GoofyGL::GenerateGrid()
+{
+	grid_size = 5000.0f;
+	grid_spacing = 25.0f;
+	std::vector<float> grid_vertices = GenerateGridVertices(grid_size, grid_spacing);
+
+	glGenVertexArrays(1, &grid_VAO);
+	glGenBuffers(1, &grid_VBO);
+
+	glBindVertexArray(grid_VAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, grid_VBO);
+	glBufferData(GL_ARRAY_BUFFER, grid_vertices.size() * sizeof(float), &grid_vertices[0], GL_STATIC_DRAW);
+
+	//position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+	grid_shader = Shader("assets/shaders/grid_shader.vs", "assets/shaders/grid_shader.fs");
 }

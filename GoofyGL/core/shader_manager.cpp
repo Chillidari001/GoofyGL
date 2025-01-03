@@ -1,5 +1,10 @@
 #include "../core/shader_manager.h"
 
+Shader::Shader()
+{
+
+}
+
 Shader::Shader(const char* vertex_path, const char* fragement_path)
 {
 	std::string vertex_code;
