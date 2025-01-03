@@ -2,13 +2,9 @@
 
 GoofyGL::GoofyGL()
 {
-	main_camera = Camera(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), base_yaw, base_pitch);
-	light_pos = glm::vec3(1.2f, 1.0f, 2.0f);
-
-
 	//glfw initialisation and configuration
 	glfwInit();
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -37,6 +33,11 @@ GoofyGL::GoofyGL()
 		//return -1;
 	}
 
+	if (!GL_ARB_bindless_texture)
+	{
+		std::cerr << "Bindless textures not supported on this system. Whoops!" << std::endl;
+	}
+
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_DEPTH_CLAMP);
 	glDepthFunc(GL_LESS);
@@ -60,6 +61,10 @@ GoofyGL::~GoofyGL()
 
 void GoofyGL::GoofyGLRun()
 {
+
+	main_camera = Camera(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), base_yaw, base_pitch);
+	light_pos = glm::vec3(1.2f, 1.0f, 2.0f);
+
 	//build and compile shaders
 	//------------------------
 	//Shader first_shader("shader.vs", "shader.fs");
@@ -89,7 +94,7 @@ void GoofyGL::GoofyGLRun()
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
-	ImGui_ImplOpenGL3_Init("#version 330");
+	ImGui_ImplOpenGL3_Init("#version 430");
 
 	//variables to manipulate in imgui window
 	glm::vec3 point_lights_ambient = glm::vec3(0.05f, 0.05f, 0.05f);
@@ -128,7 +133,7 @@ void GoofyGL::GoofyGLRun()
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		}
 
-		if (first_model.IsLoaded() && first_model.IsGPUResourcesCreated())
+		if (first_model.IsLoaded() && !first_model.IsGPUResourcesCreated())
 		{
 			first_model.CreateGPUResources();
 		}
@@ -147,7 +152,7 @@ void GoofyGL::GoofyGLRun()
 		//can just use same vertex shader but whatever
 		grid_shader.Use();
 		//set transform shit
-		glm::mat4 grid_projection = glm::perspective(glm::radians(main_camera.zoom), (float)screen_width / (float)screen_height, 0.1f, 1000.0f);
+		glm::mat4 grid_projection = glm::perspective(glm::radians(main_camera.zoom), (float)screen_width / (float)screen_height, 0.1f, 10000.0f);
 		glm::mat4 grid_view = main_camera.GetViewMatrix();
 		grid_shader.SetMat4("projection", grid_projection);
 		grid_shader.SetMat4("view", grid_view);
@@ -211,9 +216,9 @@ void GoofyGL::GoofyGLRun()
 		//set values of material vectors in material struct
 		//lighting_shader.SetVec3("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
 		//lighting_shader.SetVec3("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
-		lighting_shader.SetInt("material.diffuse", 0);
-		lighting_shader.SetInt("material.specular", 1);
-		lighting_shader.SetFloat("material.shininess", 32.0f);
+		//lighting_shader.SetInt("material.diffuse", 0);
+		//lighting_shader.SetInt("material.specular", 1);
+		//lighting_shader.SetFloat("material.shininess", 32.0f);
 
 		glm::mat4 projection = glm::perspective(glm::radians(main_camera.zoom), (float)screen_width / (float)screen_height, 0.1f, 1000.0f);
 		glm::mat4 view = main_camera.GetViewMatrix();

@@ -73,11 +73,15 @@ void Model::CreateGPUResources()
                 //generate OpenGL texture
                 glGenTextures(1, &texture.id);
 
-                GLenum error = glGetError();
-                if (error != GL_NO_ERROR)
-                {
-                    std::cerr << "OpenGL Error during glGenTextures in CreateGPUResources: " << error << std::endl;
+                //validate texture ID
+                if (texture.id == 0) {
+                    std::cerr << "Failed to generate texture ID for: " << texture.path << std::endl;
+					continue; //skip this texture
                 }
+                else {
+                    std::cout << "Generated texture ID " << texture.id << " for: " << texture.path << std::endl;
+                }
+
                 glBindTexture(GL_TEXTURE_2D, texture.id);
 
                 GLenum format;
@@ -88,7 +92,7 @@ void Model::CreateGPUResources()
                 else if (texture.channels == 4)
                     format = GL_RGBA;
                 else
-                    format = GL_RGB; //fallback
+                    format = GL_RGB; // Fallback
 
                 glTexImage2D(GL_TEXTURE_2D, 0, format, texture.width, texture.height, 0, format, GL_UNSIGNED_BYTE, texture.data.data());
                 glGenerateMipmap(GL_TEXTURE_2D);
@@ -97,6 +101,25 @@ void Model::CreateGPUResources()
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+				//generate bindless texture handle
+				texture.bindless_handle = glGetTextureHandleARB(texture.id);
+				if (texture.bindless_handle == 0)
+				{
+					std::cerr << "Failed to generate bindless texture handle for: " << texture.path << std::endl;
+                    continue;
+				}
+				glMakeTextureHandleResidentARB(texture.bindless_handle);
+
+                GLenum error = glGetError();
+                if (error != GL_NO_ERROR)
+                {
+                    std::cerr << "OpenGL Error during texture setup for " << texture.path << ": " << error << std::endl;
+                }
+                else
+                {
+                    std::cout << "Successfully loaded texture: " << texture.path << std::endl;
+                }
             }
         }
 

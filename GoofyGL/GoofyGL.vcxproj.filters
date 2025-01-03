@@ -30,9 +30,6 @@
     <ClCompile Include="core\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Downloads\glad.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="imgui\imgui_tables.cpp">
       <Filter>Source Files\imgui</Filter>
     </ClCompile>
@@ -67,6 +64,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="graphics\Model.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -134,5 +134,7 @@
     <None Include="assets\shaders\shader.vs" />
     <None Include="assets\shaders\model_test_shader.vs" />
     <None Include="assets\shaders\model_test_shader.fs" />
+    <None Include="assets\shaders\grid_shader.fs" />
+    <None Include="assets\shaders\grid_shader.vs" />
   </ItemGroup>
 </Project>

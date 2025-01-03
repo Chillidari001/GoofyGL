@@ -29,6 +29,9 @@ struct Texture {
 	int channels = 0;
 	bool is_loaded = false;
 	unsigned int id = 0; //we will use opengl texture ID on functions called on main thread
+
+	//bindless texture handle
+	uint64_t bindless_handle = 0;
 };
 
 class Mesh
@@ -52,45 +55,25 @@ public:
 
 	void Draw(Shader& shader)
 	{
-		unsigned int diffuseNumber = 1;
-		unsigned int specularNumber = 1;
-		for (unsigned int i = 0; i < textures.size(); i++)
+		//set the texture handle as a uniform
+		for (const auto& texture : textures)
 		{
-			glActiveTexture(GL_TEXTURE0 + i); //get active texture unit before binding
-			//get texture number (diffuse_texterNUMBER)
-
-			GLenum error = glGetError();
-			if (error != GL_NO_ERROR)
+			if (texture.type == "texture_diffuse")
 			{
-				std::cerr << "OpenGL Error during glActiveTexture in Draw: " << error << std::endl;
+				// Set the bindless texture handle as a uniform
+				shader.SetUint64("material_diffuse", texture.bindless_handle);
 			}
-
-			std::string number;
-			std::string name = textures[i].type;
-			if (name == "texture_diffuse")
+			else if (texture.type == "texture_specular")
 			{
-				number = std::to_string(diffuseNumber++);
-			}
-			else if (name == "texture_specular")
-			{
-				number = std::to_string(specularNumber++);
-			}
-			shader.SetInt(("material." + name + number).c_str(), i);
-			glBindTexture(GL_TEXTURE_2D, textures[i].id);
-			error = glGetError();
-			if (error != GL_NO_ERROR)
-			{
-				std::cerr << "OpenGL Error during glBindTexture in Draw: " << error << std::endl;
+				shader.SetUint64("material_specular", texture.bindless_handle);
 			}
 		}
-		glActiveTexture(GL_TEXTURE0);
 
 		shader.SetVec3("material.diffuse_color", material.diffuse);
 		shader.SetVec3("material.ambient_color", material.ambient);
 		shader.SetVec3("material.specular_color", material.specular);
 		shader.SetFloat("material.shininess", material.shininess);
 
-		//draw the mesh
 		glBindVertexArray(VAO);
 		glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
